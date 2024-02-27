@@ -1,13 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, SafeAreaView } from 'react-native';
 import SearchForm from './components/SearchForm';
 
+const onSearch = async (data) => {
+  console.log(data);
+};
 export default function App() {
   return (
-    <View style={styles.container}>
-      <SearchForm />
+    <SafeAreaView style={styles.container}>
+      <SearchForm onSearch={onSearch} />
       <StatusBar style='auto' />
-    </View>
+    </SafeAreaView>
   );
 }
 
