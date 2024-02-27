@@ -10,7 +10,7 @@ const SearchForm = ({ onSearch }) => {
   const [returnDate, setReturnDate] = useState(new Date());
 
   const onSearchPress = async () => {
-    onSearch({ from, to });
+    onSearch({ from, to, departDate, returnDate });
   };
   return (
     <View style={styles.card}>
