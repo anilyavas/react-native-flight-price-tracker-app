@@ -4,8 +4,49 @@ const { openDevtools } = require('./utils');
 const SBR_WS_ENDPOINT =
   'wss://brd-customer-hl_c6db08c4-zone-flightpricetracker:qw1g9zcrws5r@brd.superproxy.io:9222';
 
-// Example url
+async function parseRoute(div) {
+  let airlineSpan = await div.$('[class^="LogoImage_container"] span');
+  let airline = await airlineSpan?.evaluate((el) => el.textContent.trim());
 
+  if (!airline) {
+    let airlineImg = await div.$('[class^="LogoImage_container"] img');
+    airline = await airlineImg?.evaluate((el) => el.alt.trim());
+  }
+
+  const departAt = await div.$eval(
+    '[class^="LegInfo_routePartialDepart"] span',
+    (el) => el.textContent.trim()
+  );
+  const arriveAt = await div.$eval(
+    '[class^="LegInfo_routePartialArrive"] span',
+    (el) => el.textContent.trim()
+  );
+  const duration = await div.$eval(
+    '[class^="LegInfo_stopsContainer"] span',
+    (el) => el.textContent.trim()
+  );
+
+  return {
+    airline,
+    departAt,
+    arriveAt,
+    duration,
+  };
+}
+async function parseFlight(flight) {
+  const price = await flight.$eval(
+    '[class^="Price_mainPriceContainer"]',
+    (el) => el.textContent.trim()
+  );
+  const [toDiv, fromDiv] = await flight.$$(
+    '[class^="UpperTiketBody_legsContainer"] > div'
+  );
+  return {
+    price,
+    to: await parseRoute(toDiv),
+    from: await parseRoute(fromDiv),
+  };
+}
 async function main() {
   console.log('Connecting to Scraping Browser...');
   const url = `https://www.skyscanner.net/transport/flights/${from}/${to}/${departDate}/${returnDate}/`;
@@ -29,9 +70,16 @@ async function main() {
     //     detectTimeout: 10000,
     // });
     // console.log('Captcha solve status:', status);
+
+    // close the privacy popup
+    await page.locator('#cookieBannerContent button').click();
+
+    // parsing
+
+    const flights = await page.$$('a[class^="FlightTicket_link"]');
+    const data = await Promise.all(flights.map(parseFlight));
+
     console.log('Navigated! Scraping page content...');
-    const html = await page.content();
-    console.log(html);
   } finally {
     await browser.close();
   }
