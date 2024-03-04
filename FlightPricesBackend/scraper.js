@@ -47,7 +47,7 @@ async function parseFlight(flight) {
     from: await parseRoute(fromDiv),
   };
 }
-async function main() {
+async function scraperFlights(from, to, departDate, returnDate) {
   console.log('Connecting to Scraping Browser...');
   const url = `https://www.skyscanner.net/transport/flights/${from}/${to}/${departDate}/${returnDate}/`;
 
@@ -59,8 +59,8 @@ async function main() {
     console.log('Connected! Navigating to ', url);
 
     // open devtools
-    const client = await page.target().createCDPSession();
-    await openDevtools(page, client);
+    // const client = await page.target().createCDPSession();
+    // await openDevtools(page, client);
 
     await page.goto(url);
     // CAPTCHA handling: If you're expecting a CAPTCHA on the target page, use the following code snippet to check the status of Scraping Browser's automatic CAPTCHA solver
@@ -79,13 +79,12 @@ async function main() {
     const flights = await page.$$('a[class^="FlightTicket_link"]');
     const data = await Promise.all(flights.map(parseFlight));
 
-    console.log('Navigated! Scraping page content...');
+    return data;
   } finally {
     await browser.close();
   }
 }
 
-main().catch((err) => {
-  console.error(err.stack || err);
-  process.exit(1);
-});
+module.exports = {
+  scraperFlights,
+};
